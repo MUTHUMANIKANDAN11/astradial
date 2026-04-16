@@ -3581,6 +3581,48 @@ app.post('/api/v1/calls/transfer', authenticateOrg, async (req, res) => {
   }
 });
 
+// Call supervise - monitor / whisper / barge via AMI ChanSpy
+// Body: { channel, mode: 'monitor'|'whisper'|'barge', supervisor_extension? }
+app.post('/api/v1/calls/supervise', authenticateOrg, async (req, res) => {
+const { channel, mode, supervisor_extension } = req.body || {};
+if (!channel || !mode) return res.status(400).json({ error: 'channel and mode required' });
+if (!['monitor', 'whisper', 'barge'].includes(mode)) {
+    return res.status(400).json({ error: "mode must be 'monitor', 'whisper', or 'barge'" });
+}
+if (!['owner', 'admin', 'supervisor'].includes(req.userRole)) {
+    return res.status(403).json({ error: 'Supervisor role required' });
+}
+
+let supExt = supervisor_extension;
+if (!supExt && req.userId) {
+    const u = await User.findByPk(req.userId);
+    supExt = u && u.extension;
+}
+if (!supExt) return res.status(400).json({ error: 'supervisor_extension required (user has no extension)' });
+
+const opts = { monitor: 'q', whisper: 'qw', barge: 'qB' }[mode];
+
+try {
+    const AsteriskManager = require('./services/asterisk/asteriskManager');
+    const ami = new AsteriskManager();
+    await ami.connect();
+    const prefix = (req.organization && req.organization.context_prefix) || '';
+    const result = await ami.originate({
+    channel: `Local/${supExt}@${prefix}_internal`,
+    application: 'ChanSpy',
+    data: `${channel},${opts}`,
+    callerid: `Supervisor <${supExt}>`,
+    async: true
+    });
+    await ami.disconnect();
+    console.log(`[supervise] ${mode} ext=${supExt} target=${channel} opts=${opts}`);
+    res.json({ success: true, mode, target_channel: channel, supervisor_extension: supExt, ami_response: result });
+} catch (error) {
+    console.error('[supervise] failed:', error.message);
+    res.status(500).json({ error: error.message });
+}
+});
+
 // Internal: Count active outbound calls for an org (used by workflow engine concurrency)
 app.post('/api/v1/calls/automation-count', async (req, res) => {
   const ik = req.headers['x-internal-key'];
