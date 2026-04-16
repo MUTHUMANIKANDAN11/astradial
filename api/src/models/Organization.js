@@ -81,7 +81,7 @@ module.exports = (sequelize) => {
     timestamps: true,
     underscored: true,
     hooks: {
-      beforeCreate: async (org) => {
+      beforeValidate: async (org) => {
         // Generate API key if not provided
         if (!org.api_key) {
           org.api_key = `org_${uuidv4().replace(/-/g, '')}`;
