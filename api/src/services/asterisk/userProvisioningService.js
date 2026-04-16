@@ -84,7 +84,6 @@ class UserProvisioningService {
     }
 
     // Transport
-    config += `transport=transport-udp\n`;
 
     // Authentication order: username, auth_username, ip
     config += `identify_by=username,auth_username,ip\n`;
