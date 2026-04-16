@@ -499,15 +499,18 @@ export default function CallsPage() {
                               </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => { const ext = prompt("Enter your extension to listen:"); if (ext) pbxCalls.monitor(String(call.channel_id), ext, "spy").then(() => showToast("Monitoring started", "success")).catch((e) => showToast(String(e), "error")); }}>
-                                <Ear className="h-4 w-4 mr-2" />Monitor (Listen)
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => { const ext = prompt("Enter your extension to whisper:"); if (ext) pbxCalls.monitor(String(call.channel_id), ext, "whisper").then(() => showToast("Whisper started", "success")).catch((e) => showToast(String(e), "error")); }}>
-                                <Mic className="h-4 w-4 mr-2" />Whisper (Coach Agent)
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => { const ext = prompt("Enter your extension to barge:"); if (ext) pbxCalls.monitor(String(call.channel_id), ext, "barge").then(() => showToast("Barged in", "success")).catch((e) => showToast(String(e), "error")); }}>
-                                <UserPlus className="h-4 w-4 mr-2" />Barge (Join Call)
-                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => { pbxCalls.supervise({ channel: String(call.channel_id), mode: "monitor" }).then(() => showToast("Monitoring started — your phone will ring",
+  "success")).catch((e) => showToast(String(e), "error")); }}>
+                                  <Ear className="h-4 w-4 mr-2" />Monitor (Listen)
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { pbxCalls.supervise({ channel: String(call.channel_id), mode: "whisper" }).then(() => showToast("Whisper started — your phone will ring",
+  "success")).catch((e) => showToast(String(e), "error")); }}>
+                                  <Mic className="h-4 w-4 mr-2" />Whisper (Coach Agent)
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => { pbxCalls.supervise({ channel: String(call.channel_id), mode: "barge" }).then(() => showToast("Barged in — your phone will ring",
+  "success")).catch((e) => showToast(String(e), "error")); }}>
+                                  <UserPlus className="h-4 w-4 mr-2" />Barge (Join Call)
+                                </DropdownMenuItem>
                               {!!call.monitoring && (
                                 <DropdownMenuItem onClick={() => pbxCalls.stopMonitor(String(call.channel_id)).then(() => showToast("Monitoring stopped", "success")).catch((e) => showToast(String(e), "error"))}>
                                   Stop Monitoring

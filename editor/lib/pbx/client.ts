@@ -410,6 +410,11 @@ export const calls = {
     request(`/calls/${encodeURIComponent(channelId)}/hold`, { method: "POST" }),
   unhold: (channelId: string) =>
     request(`/calls/${encodeURIComponent(channelId)}/unhold`, { method: "POST" }),
+  supervise: (params: { channel: string; mode: "monitor" | "whisper" | "barge"; supervisor_extension?: string }) =>
+    request<{ success: boolean; mode: string; target_channel: string; supervisor_extension: string }>(`/calls/supervise`, {
+      method: "POST",
+      body: JSON.stringify(params),
+    }),
   // Monitoring via gateway proxy
   monitor: (channelId: string, supervisorExtension: string, type: "spy" | "whisper" | "barge" = "spy") => {
     const gwHeaders: HeadersInit = { "Content-Type": "application/json" };
