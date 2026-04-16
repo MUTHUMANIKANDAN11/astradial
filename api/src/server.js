@@ -2686,7 +2686,7 @@ app.get('/api/v1/calls/live', authenticateOrg, async (req, res) => {
         console.log('Parsed channel:', JSON.stringify(currentChannel, null, 2));
 
         // Process this channel if it has the required data
-        if (currentChannel.Channel) {
+        if (currentChannel.Channel && !currentChannel.Channel.startsWith('Local/')) {
           const matchesOrg = currentChannel.Channel?.includes(orgPrefix) ||
                             currentChannel.CallerIDNum?.includes(orgPrefix) ||
                             currentChannel.ConnectedLineNum?.includes(orgPrefix) ||
@@ -3595,8 +3595,16 @@ if (!['owner', 'admin', 'supervisor'].includes(req.userRole)) {
 
 let supExt = supervisor_extension;
 if (!supExt && req.userId) {
-    const u = await User.findByPk(req.userId);
-    supExt = u && u.extension;
+  const u = await User.findByPk(req.userId);
+  if (u && u.extension) {
+    supExt = u.extension;
+  } else {
+    const [row] = await sequelize.query(
+      'SELECT extension FROM org_users WHERE id = ?',
+      { replacements: [req.userId], type: sequelize.QueryTypes.SELECT }
+    );
+    supExt = row && row.extension;
+  }
 }
 if (!supExt) return res.status(400).json({ error: 'supervisor_extension required (user has no extension)' });
 
